@@ -101,7 +101,8 @@ class PureMF(BasicModel):
         need_replace = np.array(need_replace)
 
         if need_replace.shape[0] == 0:
-            return need_replace, torch.tensor([]).cuda(), torch.tensor([]).cuda(), 0., 0.
+            return need_replace, torch.tensor([]).to(world.device), torch.tensor([]).to(world.device), 0., 0.
+
 
 
         # get user and item list
@@ -132,8 +133,8 @@ class PureMF(BasicModel):
         all_users = self.embedding_user.weight
         all_items = self.embedding_item.weight
         users = torch.tensor(list(users)).long()
-        pos_item_index = torch.from_numpy(pos_item_index).cuda()
-        pos_item_mask = torch.from_numpy(pos_item_mask).cuda()
+        pos_item_index = torch.from_numpy(pos_item_index).to(world.device)
+        pos_item_mask = torch.from_numpy(pos_item_mask).to(world.device)
         max_len = pos_item_index.size(1)
         batch_size = pos_item_index.size(0)
         # get the mebedding of positive items and reshape them.

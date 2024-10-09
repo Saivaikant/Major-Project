@@ -213,19 +213,19 @@ def output_generative_data(dataset, recommend_model, weight_file):
             users_all_pos_items = all_pos_list[user_id]
             pos_item_index = np.array(users_all_pos_items.tolist())
             user_pos_items = np.array([pos_item_index])
-            train_pos = torch.tensor([pos_item_index])
+            train_pos = torch.from_numpy(np.array(pos_item_index))
             mask = np.array([np.ones(len(pos_item_index))])
             unique_user = [user_id]
-            need_replace, replaceable_items, replaceable_items_feature, feature_loss = \
+            need_replace, replaceable_items, replaceable_items_feature, feature_loss, *extra_values = \
                 recommend_model.computer_pos_score(unique_user, user_pos_items, mask, train_pos)
             if need_replace.shape[0] == 0:
-                pos_item_index = pos_item_index.astype(np.str)
+                pos_item_index = pos_item_index.astype(str)
             else:
                 original_items = need_replace[:, 1]
                 for iter_id, original_item in enumerate(original_items):
                     item_index = np.argwhere(pos_item_index == original_item)[0][0]
                     pos_item_index[item_index] = replaceable_items[iter_id]
-                pos_item_index = pos_item_index.astype(np.str)
+                pos_item_index = pos_item_index.astype(str)
             out_str = str(user_id) + ' ' + ' '.join(pos_item_index.tolist())+'\n'
             f.write(out_str)
     world.cprint(f"output new train is successful, save path is {output_file_name}")

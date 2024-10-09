@@ -3,6 +3,7 @@ import utils
 from world import cprint
 import torch
 import numpy as np
+import recommend
 import model
 from tensorboardX import SummaryWriter
 import time
@@ -79,3 +80,10 @@ finally:
         w.close()
 
 Procedure.output_generative_data(dataset, Recmodel, weight_file)
+# output_file = f'./output/{dataset}-replace0.2-privacy0.1.txt'
+# user_id = 0  # Change to a specific user
+# top_n = 5  # Get top 5 recommendations (adjust as needed)
+
+# # Generate and print recommendations for the specified user
+# recommendations = recommend.generate_recommendations(output_file, user_id, top_n)
+# print(f"Top {top_n} recommendations for user {user_id}: {recommendations}")

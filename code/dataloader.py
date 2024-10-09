@@ -8,6 +8,7 @@ Design Dataset here
 Every dataset's index has to start at 0
 """
 import os
+import world
 from os.path import join
 import json
 import torch
@@ -278,7 +279,7 @@ class Loader(BasicDataset):
         # 加载每个用户的
         with open(privacy_file) as f:
             user_privacy = json.load(f)
-            self.user_privacy_settings = torch.tensor(user_privacy, dtype=torch.float32).cuda()
+            self.user_privacy_settings = torch.tensor(user_privacy, dtype=torch.float32).to(world.device)
 
 
         self.Graph = None

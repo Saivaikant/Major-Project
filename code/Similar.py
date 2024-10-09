@@ -27,14 +27,13 @@ class RegularSimilar(Similar):
         self.user_sim_max = userSimMax
         self.user_sim_min = userSimMin
 
-        # torch.nn.L1Loss()
         # liner transformer
         self.user_item_feature = nn.Linear((2 * self.latent_dim) + 1, self.latent_dim)
 
     def generate_original_item_mask(self, replace_scores, item_ids):
-        item_ids = torch.tensor(item_ids).cuda()
+        item_ids = torch.tensor(item_ids).to(world.device)  # Changed to .to(world.device)
         # get the max length of proposal
-        item_matrix = torch.arange(0, replace_scores.shape[1]).long().cuda()
+        item_matrix = torch.arange(0, replace_scores.shape[1]).long().to(world.device)  # Changed to .to(world.device)
         mask_expand = item_matrix.unsqueeze(0).expand(replace_scores.shape[0], replace_scores.shape[1])
         item_expand = item_ids.unsqueeze(1).expand_as(mask_expand)
         original_mask = (item_expand == mask_expand).int()
@@ -44,12 +43,12 @@ class RegularSimilar(Similar):
     def get_replaceable_item_similarity(self, replaceable_items_feature, all_items, replace_probability):
         # Calculate the similarity of the selected item and the original item
         chunk_number = 20
-        total_similarity_score = torch.Tensor([]).cuda()
+        total_similarity_score = torch.Tensor([]).to(world.device)  # Changed to .to(world.device)
         offset_number = all_items.shape[0] / chunk_number
-        # print(all_items.shape)
+
         for i in range(chunk_number):
             start = int(np.floor(i * offset_number))
-            end = int(np.floor((i+1) * offset_number))
+            end = int(np.floor((i + 1) * offset_number))
             scores = torch.mm(replaceable_items_feature, all_items[start:end].T)
             total_similarity_score = torch.cat([total_similarity_score, scores], dim=-1)
 
@@ -58,26 +57,25 @@ class RegularSimilar(Similar):
 
         return total_similarity_score, item_similarity
 
-
     def choose_replaceable_item(self, need_replace, union_feature, all_items, privacy_settings):
         item_ids = need_replace[:, 1]
-        # get the embeddings of orginal items
+        # get the embeddings of original items
         items_emb = all_items[item_ids]
-        # obtain a union feature with item, user and privacy setting
+        # obtain a union feature with item, user, and privacy setting
         union_feature = torch.cat([union_feature, privacy_settings.view(-1, 1)], dim=-1)
         user_item_feature = self.user_item_feature(union_feature)
         # get the score with all items
         replace_score = torch.mm(user_item_feature, all_items.T)
-        # get a mask matrix to keep original index
+        # get a mask matrix to keep the original index
         original_mask, cover_msk = self.generate_original_item_mask(replace_score, item_ids)
-        # get valid  values
+        # get valid values
         replace_score = replace_score * cover_msk
+
         if world.is_train:
             # train step
-            # get the one-hot index of replaced items.
             replace_probability = F.gumbel_softmax(replace_score, hard=True, dim=-1)
-            item_sequence = torch.arange(0, all_items.shape[0]).view(1, -1).cuda()
-            # get the index and embeedings of replaced item
+            item_sequence = torch.arange(0, all_items.shape[0]).view(1, -1).to(world.device)  # Changed to .to(world.device)
+            # get the index and embeddings of replaced items
             replaceable_items = (replace_probability * item_sequence).sum(dim=-1).long()
             replaceable_items_feature = torch.mm(replace_probability, all_items)
 

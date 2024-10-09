@@ -14,5 +14,12 @@ __pycache__/
 *.npy
 *.so
 .rendered
-./data
-./data/*
+# Ignore Python virtual environments
+venv/
+env/
+.venv/
+
+# Ignore Conda environments (if they are stored locally)
+conda/
+.conda/
+
